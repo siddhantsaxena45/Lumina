@@ -49,11 +49,8 @@ const SessionCard = ({ session, onClick, onDelete }) => {
                         <svg className="w-3 h-3 ml-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="3" d="M9 5l7 7-7 7"></path>
                         </svg>
-
                     </span>
                 </div>
-
-            </div>
 
                 <div className='flex items-center justify-center pl-2 md:pl-4 md:border-l border-slate-100'>
                     <button onClick={(e) => { e.stopPropagation(); if (isDeletable) onDelete(e, session._id) }} className='p-2 text-slate-300 hover:text-rose-500 hover:bg-rose-50 rounded-xl transition-all' title='Delete Session'>
