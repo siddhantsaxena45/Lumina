@@ -23,9 +23,9 @@ const SessionCard = ({ session, onClick, onDelete }) => {
 
     return (
         <div onClick={() => onClick(session)} className='relative group bg-white border border-slate-100 py-5 pl-5 pr-14 sm:py-6 sm:pl-6 sm:pr-24 rounded-2xl sm:rounded-[2rem] flex flex-col md:flex-row items-center gap-4 transition-all hover:shadow-lg active:scale-[0.98] cursor-pointer'>
-            <div className='flex items-center gap-4 sm:gap-6 w-full md:w-auto flex-grow pr-8 min-w-0'>
+            <div className='flex items-center gap-4 sm:gap-6 w-full md:w-auto flex-grow pr-8'>
                 <div className={`w-12 h-12 sm:w-14 sm:h-14 shrink-0 rounded-xl sm:rounded-2xl flex items-center justify-center text-xl sm:text-2xl shadow-sm ${iconBg}`}>{getIcon()}</div>
-                <div className='overflow-hidden min-w-0'>
+                <div className='overflow-hidden flex-shrink'>
                     <h3 className='font-bold text-slate-900 text-base sm:text-lg truncate group-hover:text-teal-600'>{session.companyName || 'Unknown Company'}</h3>
                     <div className='flex items-center gap-2 text-[10px] font-bold text-slate-400 mt-1 uppercase tracking-tight flex-wrap'>
                         <span>{new Date(session.createdAt).toLocaleDateString()}</span>
