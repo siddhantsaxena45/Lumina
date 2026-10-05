@@ -31,7 +31,7 @@ It generates role-specific technical coding challenges (evaluated in real-time u
 * **Real-time WebSockets**: Low-latency, bidirectional streaming of interview states, AI processing status, and real-time coding evaluations using `Socket.io`.
 * **Enterprise-Grade Security**: 
   * Strict API Rate Limiting (`express-rate-limit`) to prevent abuse.
-  * NoSQL Injection protection (`express-mongo-sanitize`).
+  * Native NoSQL Injection protection via Mongoose schema validation and casting.
   * Advanced HTTP Header protections (`helmet`) and strictly configured CORS policies.
 * **High-Performance Caching**: In-memory `node-cache` invalidation strategies to heavily reduce database load during frequent Dashboard reloads.
 * **Live Proctoring (Anti-Cheat)**: TensorFlow.js (COCO-SSD) integrated directly into the browser to monitor candidate integrity during the interview.
@@ -84,7 +84,7 @@ graph TD
 - **Framework**: Node.js + Express 5
 - **Database**: MongoDB (Mongoose)
 - **Caching**: `node-cache`
-- **Security**: `helmet`, `express-rate-limit`, `express-mongo-sanitize`
+- **Security**: `helmet`, `express-rate-limit`
 - **Real-time**: `socket.io`
 
 ### AI Service (Render)
