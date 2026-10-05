@@ -9,27 +9,11 @@ import sessionRoutes from "./routes/sessionRoutes.js";
 import { notFound, errorHandler } from "./middleware/errorMiddleware.js";
 import helmet from "helmet";
 import mongoSanitize from "express-mongo-sanitize";
-import rateLimit from "express-rate-limit";
+import { rateLimit } from "express-rate-limit";
 
 dotenv.config();
 
 connectDB();
-
-const app = express();
-
-// Security Middleware
-app.use(helmet());
-app.use(mongoSanitize());
-
-const apiLimiter = rateLimit({
-    windowMs: 15 * 60 * 1000, // 15 minutes
-    max: 100, // Limit each IP to 100 requests per `window` (here, per 15 minutes)
-    standardHeaders: true, // Return rate limit info in the `RateLimit-*` headers
-    legacyHeaders: false, // Disable the `X-RateLimit-*` headers
-});
-app.use("/api/", apiLimiter);
-
-const server = http.createServer(app);
 
 const allowedOrigin = [
     'http://localhost:5174',
@@ -37,6 +21,36 @@ const allowedOrigin = [
     'https://ai-interviewer-phi-ten.vercel.app',
     process.env.FRONTEND_URL,
 ].filter(Boolean);
+
+const app = express();
+
+app.set('trust proxy', 1);
+
+// 1. CORS Middleware MUST be first!
+app.use(cors({
+    origin: allowedOrigin,
+    credentials: true,
+    methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+    allowedHeaders: ['Content-Type', 'Authorization', "X-Requested-With"],
+}));
+
+// 2. Security Middleware
+app.use(helmet({
+    crossOriginResourcePolicy: false,
+}));
+app.use(mongoSanitize());
+
+const apiLimiter = rateLimit({
+    windowMs: 15 * 60 * 1000, // 15 minutes
+    max: 100, // Limit each IP to 100 requests per `window`
+    standardHeaders: true, 
+    legacyHeaders: false, 
+    // Render requires trust proxy if rate limit is used behind their load balancer
+    // However, rate-limit handles missing trust proxy gracefully by using the proxy's IP.
+});
+app.use("/api/", apiLimiter);
+
+const server = http.createServer(app);
 
 const io = new Server(server, {
     cors: {
@@ -47,12 +61,7 @@ const io = new Server(server, {
     }
 })
 
-app.use(cors({
-    origin: allowedOrigin,
-    credentials: true,
-    methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
-    allowedHeaders: ['Content-Type', 'Authorization',"X-Requested-With"],
-}))
+// CORS is already configured above
 
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
