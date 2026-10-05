@@ -167,7 +167,8 @@ const getSessions = asyncHandler(async (req, res) => {
         .sort({ createdAt: -1 })
         .skip(skip)
         .limit(limit)
-        .select('-questions.userAnswerText -questions.userSubmittedCode'); // Exclude heavy data for list view
+        .select('-questions.userAnswerText -questions.userSubmittedCode') // Exclude heavy data for list view
+        .lean(); // Return plain JS objects so NodeCache can safely clone them
     
     sessionCache.set(cacheKey, sessions);
     res.json(sessions);
