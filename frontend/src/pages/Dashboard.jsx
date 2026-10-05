@@ -11,9 +11,9 @@ import * as pdfjsLib from 'pdfjs-dist';
 pdfjsLib.GlobalWorkerOptions.workerSrc = `//cdnjs.cloudflare.com/ajax/libs/pdf.js/${pdfjsLib.version}/pdf.worker.min.mjs`;
 
 const ROUND_TYPES = [
-  { id: 'tech-1', label: 'Tech Round 1', desc: 'Coding, DSA, or Full Stack based on JD', icon: '💻' },
-  { id: 'tech-2', label: 'Tech Round 2', desc: 'BTech concepts, OOPs, DBMS, Resume deep dive, Puzzles', icon: '🧠' },
-  { id: 'hr', label: 'HR Round', desc: 'Behavioral & Fit Round (STAR method)', icon: '🤝' }
+  { id: 'tech-1', label: 'Tech Round 1', desc: 'Coding Round', icon: '💻' },
+  { id: 'tech-2', label: 'Tech Round 2', desc: 'Technical Interview', icon: '🧠' },
+  { id: 'hr', label: 'HR Round', desc: 'Behavioral & Fit Round', icon: '🤝' }
 ];
 
 const DURATIONS = [10, 15, 30, 45, 60];

@@ -22,15 +22,15 @@ const SessionCard = ({ session, onClick, onDelete }) => {
     const scoreColor = session.status === 'completed' ? (session.overallScore > 75 ? ' text-emerald-500' : 'text-orange-500') : 'text-slate-300';
 
     return (
-        <div onClick={() => onClick(session)} className='relative group bg-white border border-slate-100 py-5 pl-5 pr-14 sm:py-6 sm:pl-6 sm:pr-20 rounded-2xl sm:rounded-[2rem] flex flex-col md:flex-row items-center gap-4 transition-all hover:shadow-lg active:scale-[0.98] cursor-pointer'>
-            <div className='flex items-center gap-4 sm:gap-6 w-full md:w-auto flex-grow pr-0 sm:pr-8'>
+        <div onClick={() => onClick(session)} className='relative group bg-white border border-slate-100 p-5 sm:p-6 rounded-2xl sm:rounded-[2rem] flex flex-col md:flex-row items-center gap-4 transition-all hover:shadow-lg active:scale-[0.98] cursor-pointer'>
+            <div className='flex items-center gap-4 sm:gap-6 w-full md:w-auto flex-grow pr-8'>
                 <div className={`w-12 h-12 sm:w-14 sm:h-14 shrink-0 rounded-xl sm:rounded-2xl flex items-center justify-center text-xl sm:text-2xl shadow-sm ${iconBg}`}>{getIcon()}</div>
                 <div className='overflow-hidden'>
                     <h3 className='font-bold text-slate-900 text-base sm:text-lg truncate group-hover:text-teal-600'>{session.companyName || 'Unknown Company'}</h3>
                     <div className='flex items-center gap-2 text-[10px] font-bold text-slate-400 mt-1 uppercase tracking-tight'>
                         <span>{new Date(session.createdAt).toLocaleDateString()}</span>
                         <span>.</span>
-                        <span className='text-slate-600 bg-slate-100 px-1.5 py-0.5 rounded-md'>{getRoundTitle()}</span>
+                        <span className='text-slate-600 bg-slate-100 px-2 py-0.5 rounded-md whitespace-nowrap'>{getRoundTitle()}</span>
                     </div>
                 </div>
             </div>
@@ -53,8 +53,8 @@ const SessionCard = ({ session, onClick, onDelete }) => {
                 </div>
             </div>
 
-            {/* Absolute positioned Delete Button to guarantee it never wraps or overlaps */}
-            <button onClick={(e) => { e.stopPropagation(); if (isDeletable) onDelete(e, session._id) }} className='absolute top-4 sm:top-1/2 sm:-translate-y-1/2 right-3 sm:right-6 p-2 text-slate-300 hover:text-rose-500 hover:bg-rose-50 rounded-xl transition-all' title='Delete Session'>
+            {/* Absolute positioned Delete Button placed in the top right, above the 'completed' badge */}
+            <button onClick={(e) => { e.stopPropagation(); if (isDeletable) onDelete(e, session._id) }} className='absolute top-3 right-3 sm:top-5 sm:right-5 p-2 text-slate-300 hover:text-rose-500 hover:bg-rose-50 rounded-xl transition-all' title='Delete Session'>
                 <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
                 </svg>
