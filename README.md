@@ -1,151 +1,179 @@
 <div align="center">
   <img src="frontend/public/logo.svg" alt="Lumina AI Logo" width="120" />
   <h1>Lumina AI - Next-Gen Technical & Behavioral Interviewer</h1>
-  <p>An advanced, AI-driven mock interview platform designed to help candidates prepare for both technical and behavioral interviews with real-time feedback, voice synthesis, and genuine AI performance analytics.</p>
+
+  <p>
+    <strong>An advanced, scalable, and secure AI-driven mock interview platform.</strong><br>
+    Designed to help candidates prepare for technical and behavioral interviews with real-time feedback, human-like voice synthesis, and deep AI performance analytics.
+  </p>
+
+  <p>
+    <img src="https://img.shields.io/badge/React-19.0-blue.svg?style=flat-square&logo=react" alt="React" />
+    <img src="https://img.shields.io/badge/Node.js-Express-green.svg?style=flat-square&logo=node.js" alt="Node.js" />
+    <img src="https://img.shields.io/badge/FastAPI-Python-teal.svg?style=flat-square&logo=fastapi" alt="FastAPI" />
+    <img src="https://img.shields.io/badge/MongoDB-Mongoose-brightgreen.svg?style=flat-square&logo=mongodb" alt="MongoDB" />
+    <img src="https://img.shields.io/badge/AI-Google_Gemini_2.5-orange.svg?style=flat-square&logo=google" alt="Gemini AI" />
+  </p>
 </div>
 
 ---
 
 ## 🌟 Overview
 
-Lumina AI dynamically generates role-specific interview questions, supports both coding and conceptual questions, and provides real-time, comprehensive evaluation of the candidate's answers. It simulates a realistic interview environment by utilizing **Text-to-Speech (TTS)** for human-like voice interactions and **Speech-to-Text (STT)** via Google Gemini for seamless verbal communication.
+Lumina AI acts as a sophisticated, dynamic interviewer. Candidates provide their resume and the Job Description (JD) they are targeting. The platform parses this data entirely in the browser, securely transmits it, and orchestrates an interview session. 
+
+It generates role-specific technical coding challenges (evaluated in real-time using Monaco Editor), conceptual oral questions, and behavioral prompts (STAR method). Results are aggregated into an ATS match score and a highly detailed, AI-generated performance breakdown.
 
 ## 🚀 Key Features
 
-- **Dynamic Question Generation**: Automatically generates interview questions tailored to the candidate's specific role (e.g., *MERN Stack Developer*) and experience level (e.g., *Junior, Senior*).
-- **HR / Behavioral Mode (STAR Method)**: A specialized mode where the AI acts as a hiring manager. It asks behavioral prompts (e.g., *"Tell me about a time..."*) and strictly evaluates the candidate's response using the **Situation, Task, Action, Result (STAR)** framework.
-- **Coding & Conceptual Challenges**: Supports a mix of hands-on coding challenges via Monaco Editor and conceptual oral questions.
-- **Lightning-Fast AI (Gemini 2.5 Flash)**: Uses Google's Gemini 2.5 Flash model for incredibly fast, native audio evaluation, coding evaluation, and intelligent question generation.
-- **Human-like TTS Voices**: Integrated with `edge-tts` to stream highly realistic AI voices directly to the browser, eliminating the robotic feel of standard web speech APIs.
-- **Live Proctoring**: Integrates TensorFlow.js (COCO-SSD) for candidate monitoring and anti-cheat mechanisms.
-- **Real AI Analytics Dashboard**: The user profile dashboard doesn't just show charts—it bundles your historical interview data and asks Gemini to synthesize a **completely unique, personalized performance summary** and actionable recommendations on-the-fly.
-- **Real-Time Communication**: Uses Socket.io for live syncing between the client, Node.js backend, and Python microservice to provide an instantaneous, polling-free experience.
+* **Resume & JD Parsing (Browser-side)**: Secure, lightning-fast PDF parsing directly in the browser via `pdf.js` before data ever touches the network.
+* **Microservices BFF Architecture**: Decoupled Node.js Backend-for-Frontend (BFF) and Python/FastAPI AI Microservice for independent scaling and failure isolation.
+* **Real-time WebSockets**: Low-latency, bidirectional streaming of interview states, AI processing status, and real-time coding evaluations using `Socket.io`.
+* **Enterprise-Grade Security**: 
+  * Strict API Rate Limiting (`express-rate-limit`) to prevent abuse.
+  * NoSQL Injection protection (`express-mongo-sanitize`).
+  * Advanced HTTP Header protections (`helmet`) and strictly configured CORS policies.
+* **High-Performance Caching**: In-memory `node-cache` invalidation strategies to heavily reduce database load during frequent Dashboard reloads.
+* **Live Proctoring (Anti-Cheat)**: TensorFlow.js (COCO-SSD) integrated directly into the browser to monitor candidate integrity during the interview.
+* **Containerized & CI/CD Ready**: Fully Dockerized environments (`Dockerfile`, `docker-compose.yml`) with automated GitHub Actions testing workflows.
+
+## 🏗️ System Architecture
+
+Lumina AI leverages a highly scalable **Backend-for-Frontend (BFF)** architectural pattern:
+
+```mermaid
+graph TD
+    Client[React + Vite Frontend]
+    Node[Node.js + Express BFF]
+    FastAPI[Python FastAPI AI Microservice]
+    Mongo[(MongoDB)]
+    Gemini((Google Gemini 2.5))
+    
+    Client -- "HTTP / REST" --> Node
+    Client -- "Socket.io (Real-time)" --> Node
+    
+    Node -- "Reads/Writes" --> Mongo
+    Node -- "Internal HTTP Calls" --> FastAPI
+    
+    FastAPI -- "AI Processing / Prompts" --> Gemini
+    
+    classDef frontend fill:#61DAFB,stroke:#333,stroke-width:2px,color:#000;
+    classDef backend fill:#8CC84B,stroke:#333,stroke-width:2px,color:#000;
+    classDef python fill:#009688,stroke:#333,stroke-width:2px,color:#fff;
+    classDef db fill:#47A248,stroke:#333,stroke-width:2px,color:#fff;
+    classDef external fill:#F4B400,stroke:#333,stroke-width:2px,color:#000;
+    
+    class Client frontend;
+    class Node backend;
+    class FastAPI python;
+    class Mongo db;
+    class Gemini external;
+```
 
 ## 🛠️ Technology Stack
 
-### Frontend (Vite + React)
+### Frontend (Vercel)
 - **Framework**: React 19 + Vite
 - **Styling**: Tailwind CSS + PostCSS
 - **State Management**: Redux Toolkit
 - **Code Editor**: Monaco Editor (`@monaco-editor/react`)
-- **Machine Learning**: TensorFlow.js (COCO-SSD) for proctoring
-- **Charts**: Chart.js + react-chartjs-2
-- **Authentication**: Google OAuth + JWT
+- **PDF Processing**: `pdfjs-dist`
+- **Machine Learning**: TensorFlow.js (COCO-SSD)
 
-### Backend (Node.js API)
-- **Framework**: Node.js + Express
+### Backend (Render)
+- **Framework**: Node.js + Express 5
 - **Database**: MongoDB (Mongoose)
-- **Real-time**: Socket.io
-- **Authentication**: JWT & Google Auth Library
+- **Caching**: `node-cache`
+- **Security**: `helmet`, `express-rate-limit`, `express-mongo-sanitize`
+- **Real-time**: `socket.io`
 
-### AI Service (Python Microservice)
-- **Framework**: FastAPI
+### AI Service (Render)
+- **Framework**: Python + FastAPI
 - **LLM Engine**: Google GenAI SDK (`gemini-2.5-flash`)
 - **Voice Synthesis (TTS)**: `edge-tts` (Microsoft Edge Neural Voices)
 - **Audio Processing**: `pydub`, `python-multipart`
-- **Resilience**: Exponential Backoff Retry Mechanisms & API Key Rotation
 
 ## 📂 Project Structure
 
 ```text
 .
-├── frontend/             # React/Vite Frontend application
-├── backend/              # Node.js/Express Main API server
-└── ai-service/           # Python/FastAPI Microservice for AI evaluations, analysis, and TTS
+├── frontend/             # React/Vite UI & Client-side parsing
+├── backend/              # Node.js BFF, Database schemas, Auth, WebSockets
+├── ai-service/           # Python FastAPI for heavy LLM & Audio workloads
+├── docker-compose.yml    # Local development orchestration
+└── .github/workflows/    # CI/CD pipelines
 ```
 
 ---
 
-## 💻 Local Development Setup
+## 💻 Local Development Setup (Docker)
+
+The absolute fastest way to run Lumina AI locally is via Docker Compose. 
 
 ### Prerequisites
-- [Node.js](https://nodejs.org/) (v18 or higher)
-- [Python](https://www.python.org/) (3.9 or higher)
-- [FFmpeg](https://ffmpeg.org/) (Required for `pydub` audio processing)
+- Docker & Docker Compose
 - Google Gemini API Keys
+- MongoDB URI
 
-### 1. Setup AI Service (Python)
-```bash
-cd ai-service
-python -m venv venv
+### 1. Environment Variables
+Create a `.env` file in the root directory (or inside each specific folder as defined below):
 
-# On Windows:
-.\venv\Scripts\activate
-# On Mac/Linux:
-source venv/bin/activate
-
-pip install -r requirements.txt
+**`backend/.env`**
+```env
+MONGO_URI=mongodb://localhost:27017/lumina
+PORT=5000
+FRONTEND_URL=http://localhost:5173
+JWT_SECRET=supersecretjwtkey
+GOOGLE_CLIENT_ID=your_google_client_id
+AI_SERVICE_URL=http://ai-service:8000
 ```
-Create a `.env` in `ai-service/`:
+
+**`ai-service/.env`**
 ```env
 AI_SERVICE_PORT=8000 
 GOOGLE_API_KEY1=your_api_key_here
 GOOGLE_API_KEY2=your_api_key_here
 ```
-Run the FastAPI server:
-```bash
-python main.py
-```
 
-### 2. Setup Backend (Node.js)
-```bash
-cd backend
-npm install
-```
-Create a `.env` in `backend/`:
-```env
-MONGO_URI=mongodb://localhost:27017/ai
-PORT=5000
-FRONTEND_URL=http://localhost:5173
-JWT_SECRET=supersecretjwtkey
-GOOGLE_CLIENT_ID=your_google_client_id
-```
-Start the development server:
-```bash
-npm run dev
-```
-
-### 3. Setup Frontend (React)
-```bash
-cd frontend
-npm install
-```
-Create a `.env` in `frontend/`:
+**`frontend/.env`**
 ```env
 VITE_API_URL=http://localhost:5000/api
 VITE_GOOGLE_CLIENT_ID=your_google_client_id
 ```
-Start the Vite dev server:
+
+### 2. Run the Cluster
+From the root of the project, execute:
 ```bash
-npm run dev
+docker-compose up --build
 ```
+This will automatically build and orchestrate the Node.js backend, Python FastAPI service, and your local MongoDB instance. 
+
+*Note: The frontend should be run locally using `npm run dev` in the `frontend/` directory for HMR (Hot Module Replacement).*
 
 ---
 
 ## ☁️ Cloud Deployment (Free Tier)
 
-This repository is optimized for free-tier deployments on **Vercel** and **Render**.
+This architecture is deeply optimized to run efficiently on free-tier cloud providers.
 
 ### 1. Database (MongoDB Atlas)
 - Create a free cluster on [MongoDB Atlas](https://www.mongodb.com/cloud/atlas).
-- Allow network access from anywhere (`0.0.0.0/0`).
-- Copy your connection string.
+- Whitelist network access (`0.0.0.0/0`).
 
 ### 2. AI Service (Render)
 - Deploy `ai-service` as a **Web Service** on [Render](https://render.com).
-- **Build Command**: `pip install -r requirements.txt && apt-get update && apt-get install -y ffmpeg` *(Note: ffmpeg must be installed on the deployment environment for audio parsing to work).*
+- **Build Command**: `pip install -r requirements.txt && apt-get update && apt-get install -y ffmpeg`
 - **Start Command**: `uvicorn main:app --host 0.0.0.0 --port $PORT`
-- Set your `GOOGLE_API_KEY`s in the Environment Variables.
 
 ### 3. Node.js Backend (Render)
 - Deploy `backend` as a **Web Service** on Render.
 - **Build Command**: `npm install`
 - **Start Command**: `npm start`
-- Set `MONGO_URI`, `AI_SERVICE_URL` (URL from Step 2), and `FRONTEND_URL` in the Environment Variables.
+- *Set `MONGO_URI`, `AI_SERVICE_URL`, and `FRONTEND_URL` in the Dashboard.*
 
 ### 4. Frontend (Vercel)
-- Deploy `frontend` on [Vercel](https://vercel.com) (Vite preset will be auto-detected).
-- Set `VITE_API_URL` to your deployed Backend URL (from Step 3).
+- Deploy `frontend` on [Vercel](https://vercel.com).
+- *Set `VITE_API_URL` to your Render Backend URL.*
 
 ## 📄 License
 ISC License
