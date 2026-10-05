@@ -1,7 +1,6 @@
 // backend/controllers/sessionController.js
 import asyncHandler from 'express-async-handler';
 import Session from '../models/SessionModel.js';
-import fetch from 'node-fetch'; // Standard for making HTTP requests (npm install node-fetch@2.6.1)
 import fs from 'fs'; // <-- NEW: For reading and deleting the temporary file
 import FormData from 'form-data'; // <-- NEW: For sending files to FastAPI
 import path from 'path';

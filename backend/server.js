@@ -68,8 +68,6 @@ app.use(express.urlencoded({ extended: true }));
 
 app.set("io", io);
 
-import fetch from "node-fetch";
-
 app.get("/", (req, res) => {
     // Wake up the AI service in the background if it's sleeping on Render
     const AI_SERVICE_URL = process.env.AI_SERVICE_URL || 'http://localhost:8000';
