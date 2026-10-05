@@ -9,8 +9,10 @@ import NodeCache from 'node-cache';
 
 const sessionCache = new NodeCache({ stdTTL: 600 }); // Cache for 10 minutes
 
-// URL for the Python AI Microservice (Must match Step 6 setup)
-const AI_SERVICE_URL = process.env.AI_SERVICE_URL || 'http://localhost:8000';
+let AI_SERVICE_URL = process.env.AI_SERVICE_URL || 'http://localhost:8000';
+if (!AI_SERVICE_URL.startsWith('http')) {
+    AI_SERVICE_URL = 'https://' + AI_SERVICE_URL;
+}
 
 // Helper function to handle Render's sleeping instances by retrying
 const fetchWithRetry = async (url, options = {}, retries = 30, delayMs = 5000) => {

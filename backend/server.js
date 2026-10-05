@@ -70,8 +70,15 @@ app.set("io", io);
 
 app.get("/", (req, res) => {
     // Wake up the AI service in the background if it's sleeping on Render
-    const AI_SERVICE_URL = process.env.AI_SERVICE_URL || 'http://localhost:8000';
-    fetch(AI_SERVICE_URL).catch(err => console.error("AI Service wake-up ping failed:", err.message));
+    try {
+        let aiUrl = process.env.AI_SERVICE_URL || 'http://localhost:8000';
+        if (!aiUrl.startsWith('http')) {
+            aiUrl = 'https://' + aiUrl;
+        }
+        fetch(aiUrl).catch(err => console.error("AI Service wake-up ping failed asynchronously:", err.message));
+    } catch (err) {
+        console.error("AI Service wake-up ping failed synchronously:", err.message);
+    }
     
     res.send("API is running");
 });
