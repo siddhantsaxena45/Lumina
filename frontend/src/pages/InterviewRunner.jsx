@@ -342,12 +342,23 @@ function InterviewRunner() {
   }, [currentQuestionIndex, currentQuestion?.questionText, hasJoined, isQuestionLocked, isTerminated]);
 
     const handleJoin = async () => {
-      const elem = document.documentElement;
-      if (elem.requestFullscreen) elem.requestFullscreen().catch(()=>{});
+      // 1. Request BOTH camera and microphone permissions FIRST
+      // This prevents the browser from forcing an exit from fullscreen mode when the permission dialog appears.
       try {
-         const stream = await navigator.mediaDevices.getUserMedia({ video: true });
+         const stream = await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
          videoStreamRef.current = stream;
-      } catch (err) { toast.error("Camera required."); return; }
+         // We keep the video and audio tracks active so we don't have to request permission again
+      } catch (err) { toast.error("Camera and Microphone permissions are required."); return; }
+
+      // 2. Now that permissions are granted, enter fullscreen
+      const elem = document.documentElement;
+      if (elem.requestFullscreen) {
+         try {
+             await elem.requestFullscreen();
+         } catch (e) {
+             console.warn("Fullscreen request failed:", e);
+         }
+      }
       
       // Call StartSession to officially kick off the timer
       try {
