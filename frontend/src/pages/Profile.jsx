@@ -111,7 +111,7 @@ const Profile = () => {
                     .join(" | ");
 
                 return {
-                    role: s.role,
+                    role: s.roundType === 'tech-1' ? 'Tech Round 1' : s.roundType === 'tech-2' ? 'Tech Round 2' : 'HR Round',
                     technicalScore: s.metrics?.avgTechnical || 0,
                     confidenceScore: s.metrics?.avgConfidence || 0,
                     aiFeedback: aggregatedFeedback

@@ -51,18 +51,30 @@ const sessionSchema= new mongoose.Schema({
         required: true,
         index: true,
     },
-    role:{
-        type:String,
-        required:true
+    jobDescription: {
+        type: String,
+        required: true
     },
-    level:{
-        type:String,
-        required:true
+    resumeText: {
+        type: String,
+        required: true
     },
-    interviewType:{
-        type:String,
-        enum:["oral-only","coding-mix","behavioral"],
-        required:true
+    roundType: {
+        type: String,
+        enum: ["tech-1", "tech-2", "hr"],
+        required: true
+    },
+    jdSummary: {
+        type: String,
+        default: ""
+    },
+    companyName: {
+        type: String,
+        default: "Unknown Company"
+    },
+    atsScore: {
+        type: Number,
+        default: 0
     },
     duration: {
         type: Number, // in minutes

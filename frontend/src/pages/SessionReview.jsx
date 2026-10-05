@@ -62,7 +62,7 @@ function SessionReview() {
         );
     }
 
-    const { overallScore, metrics, role, level, questions, startTime, endTime, violations = 0 } = activeSession;
+    const { overallScore, metrics, roundType, questions, startTime, endTime, violations = 0, atsScore = 0, companyName = 'Unknown Company', jdSummary = '' } = activeSession;
     const finalMetrics = metrics || {};
     const integrityScore = Math.max(100 - (violations * 5), 20);
     const selectionOdds = getSelectionOdds(overallScore);
@@ -88,8 +88,14 @@ function SessionReview() {
                        <span className="text-teal-600 font-black uppercase tracking-[0.3em] text-[10px]">Session Analysis Report</span>
                     </div>
                     <h1 className="text-3xl sm:text-6xl font-black text-slate-900 tracking-tighter uppercase leading-none break-words overflow-wrap-anywhere">
-                        {role} <span className="text-slate-300 font-light block sm:inline">({level})</span>
+                        {companyName} <span className="text-slate-300 font-light block sm:inline">({roundType === 'tech-1' ? 'Tech Round 1' : roundType === 'tech-2' ? 'Tech Round 2' : 'HR Round'})</span>
                     </h1>
+                    {jdSummary && (
+                        <p className="mt-4 text-sm font-medium text-slate-500 max-w-2xl bg-slate-100 p-3 rounded-xl border border-slate-200 shadow-inner">
+                            <span className="font-bold text-slate-700">JD Summary: </span>
+                            {jdSummary}
+                        </p>
+                    )}
                 </div>
                 <div className="flex items-center gap-4 bg-white p-4 rounded-3xl shadow-sm border border-slate-100">
                     <span className="text-xs font-black text-slate-400 uppercase tracking-widest">Final Scrape</span>
@@ -112,6 +118,12 @@ function SessionReview() {
                         <p className={`text-[10px] font-bold mt-2 uppercase text-slate-400`}>{stat.desc}</p>
                     </div>
                 ))}
+
+                <div className="bg-white p-5 rounded-3xl shadow-sm border border-slate-100 flex flex-col justify-between group hover:border-teal-200 transition-all cursor-default">
+                    <p className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em]">ATS Score</p>
+                    <p className={`text-3xl font-black mt-2 tracking-tighter ${atsScore >= 75 ? 'text-emerald-500' : 'text-orange-500'}`}>{atsScore}%</p>
+                    <p className="text-[10px] font-bold mt-2 uppercase text-slate-400">Match against JD</p>
+                </div>
             </div>
 
             {/* SELECTION PREDICTION BAR */}

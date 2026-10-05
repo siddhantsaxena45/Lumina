@@ -174,9 +174,9 @@ function InterviewRunner() {
 
   useEffect(() => { if (sessionId) dispatch(getSessionById(sessionId)); }, [dispatch, sessionId]);
   useEffect(() => {
-    if (activeSession?.role) setSelectedLanguage(ROLE_LANGUAGE_MAP[activeSession.role] || "plaintext");
+    if (activeSession?.jobDescription) setSelectedLanguage("javascript"); // Default to JS, or can try to parse from JD
     if (activeSession?.questions?.length > 0) setCurrentQuestionIndex(activeSession.questions.length - 1);
-  }, [activeSession?.role, activeSession?.questions?.length]);
+  }, [activeSession?.jobDescription, activeSession?.questions?.length]);
   useEffect(() => { localStorage.setItem(`drafts_${sessionId}`, JSON.stringify(drafts)); }, [drafts, sessionId]);
 
   // Clean up camera on unmount
@@ -454,7 +454,7 @@ function InterviewRunner() {
                 <span className="text-xl sm:text-2xl">🤖</span>
             </div>
             <div>
-                <h1 className="text-base sm:text-xl font-bold tracking-tight text-white leading-tight line-clamp-1">{activeSession.role}</h1>
+                <h1 className="text-base sm:text-xl font-bold tracking-tight text-white leading-tight line-clamp-1">{activeSession.roundType === 'tech-1' ? 'Tech Round 1' : activeSession.roundType === 'tech-2' ? 'Tech Round 2' : 'HR Round'}</h1>
                 <div className="flex flex-wrap items-center gap-1.5 sm:gap-2 mt-1">
                 <span className={`text-[8px] sm:text-[9px] font-black uppercase px-2 py-0.5 rounded ${proctorStatus.includes('ACTIVE') ? 'bg-emerald-500 text-slate-900' : 'bg-slate-700 text-slate-300'}`}>{proctorStatus}</span>
                 {isWaitingForAI && <span className="text-[8px] sm:text-[9px] font-black uppercase bg-amber-500 text-slate-900 px-2 py-0.5 rounded animate-pulse">PAUSED</span>}

@@ -1,11 +1,15 @@
 // backend/controllers/sessionController.js
 import asyncHandler from 'express-async-handler';
-import Session from '../models/SessionModel.js';
+import Session from '../models/sessionModel.js';
 import fetch from 'node-fetch'; // Standard for making HTTP requests (npm install node-fetch@2.6.1)
 import fs from 'fs'; // <-- NEW: For reading and deleting the temporary file
 import FormData from 'form-data'; // <-- NEW: For sending files to FastAPI
 import path from 'path';
 import mongoose from 'mongoose';
+import NodeCache from 'node-cache';
+
+const sessionCache = new NodeCache({ stdTTL: 600 }); // Cache for 10 minutes
+
 // URL for the Python AI Microservice (Must match Step 6 setup)
 const AI_SERVICE_URL = process.env.AI_SERVICE_URL || 'http://localhost:8000';
 
@@ -60,20 +64,20 @@ const pushSocketUpdate = (io, userId, sessionId, status, message, session = null
 // @route   POST /api/sessions/
 // @access  Private
 const createSession = asyncHandler(async (req, res) => {
-    const { role, level, interviewType, duration } = req.body;
+    const { jobDescription, resumeText, roundType, duration } = req.body;
     const userId = req.user._id;
 
-    if (!role || !level || !interviewType || !duration) {
+    if (!jobDescription || !resumeText || !roundType || !duration) {
         res.status(400);
-        throw new Error('Please specify role, level, interview type, and duration.');
+        throw new Error('Please specify job description, resume text, round type, and duration.');
     }
 
     // 1. Create the session placeholder in MongoDB
     let session = await Session.create({
         user: userId,
-        role,
-        level,
-        interviewType,
+        jobDescription,
+        resumeText,
+        roundType,
         duration,
         status: 'pending',
     });
@@ -93,22 +97,22 @@ const createSession = asyncHandler(async (req, res) => {
     (async () => {
         try {
             // A. Notify the user via Socket.io that processing has started
-            pushSocketUpdate(io, userId, session._id, 'AI_GENERATING_QUESTIONS', `Generating initial question for ${role}...`);
+            pushSocketUpdate(io, userId, session._id, 'AI_GENERATING_QUESTIONS', `Generating initial question...`);
 
             // B. Call the Python AI Microservice with retry logic
             const aiResponse = await fetchWithRetry(`${AI_SERVICE_URL}/generate-questions`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
-                    role,
-                    level,
+                    job_description: jobDescription,
+                    resume_text: resumeText,
                     count: 1, // Just generate ONE question to start
-                    interview_type: interviewType 
+                    round_type: roundType 
                 }),
             });
 
             const aiData = await aiResponse.json();
-            const codingCount = interviewType === 'coding-mix' ? 1 : 0;
+            const codingCount = roundType === 'tech-1' ? 1 : 0;
             // C. Map the raw questions into the structured Mongoose sub-document format
             const questionsArray = aiData.questions.map((qText, index) => ({
                 questionText: qText,
@@ -119,12 +123,16 @@ const createSession = asyncHandler(async (req, res) => {
 
             // D. Update the session in MongoDB
             session.questions = questionsArray;
+            session.jdSummary = aiData.jd_summary;
+            session.companyName = aiData.company_name || 'Unknown Company';
+            session.atsScore = aiData.ats_score;
             session.status = 'in-progress';
             // REMOVED: session.startTime = Date.now(); 
             // We now set startTime only when the user clicks "Start Session"
             await session.save();
 
             // E. Push final result back to the client via Socket.io
+            sessionCache.flushAll(); // Invalidate cache since a new session is added
             pushSocketUpdate(io, userId, session._id, 'QUESTIONS_READY', 'Question generated successfully. Starting session.', session);
 
         } catch (error) {
@@ -142,10 +150,25 @@ const createSession = asyncHandler(async (req, res) => {
 // @route   GET /api/sessions/
 // @access  Private
 const getSessions = asyncHandler(async (req, res) => {
+    const page = Number(req.query.page) || 1;
+    const limit = Number(req.query.limit) || 50; // Default limit to 50 for pagination
+    const skip = (page - 1) * limit;
+
+    const cacheKey = `sessions_${req.user._id}_${page}_${limit}`;
+    const cachedSessions = sessionCache.get(cacheKey);
+
+    if (cachedSessions) {
+        return res.json(cachedSessions);
+    }
+
     // Find all sessions for the logged-in user, sorted by newest first
     const sessions = await Session.find({ user: req.user._id })
         .sort({ createdAt: -1 })
+        .skip(skip)
+        .limit(limit)
         .select('-questions.userAnswerText -questions.userSubmittedCode'); // Exclude heavy data for list view
+    
+    sessionCache.set(cacheKey, sessions);
     res.json(sessions);
 });
 
@@ -182,6 +205,9 @@ const deleteSession = asyncHandler(async (req, res) => {
     }
 
     await session.deleteOne();
+
+    // Invalidate cache
+    sessionCache.flushAll();
 
     res.status(200).json({ id: req.params.id });
 });
@@ -239,11 +265,11 @@ const evaluateAnswerAsync = async (io, userId, sessionId, questionIndex, audioFi
         pushSocketUpdate(io, userId, sessionId, 'AI_EVALUATING', `AI is analyzing Q${questionIdx + 1}...`);
         
         const formData = new FormData();
-        formData.append('role', session.role);
-        formData.append('level', session.level);
+        formData.append('job_description', session.jobDescription);
+        formData.append('resume_text', session.resumeText);
         formData.append('question', question.questionText);
         formData.append('question_type', question.questionType);
-        formData.append('interview_type', session.interviewType);
+        formData.append('round_type', session.roundType);
         formData.append('user_answer', transcription || ""); // Fallback if needed
         formData.append('user_code', code || "");
         
@@ -301,9 +327,9 @@ const evaluateAnswerAsync = async (io, userId, sessionId, questionIndex, audioFi
                         method: 'POST',
                         headers: { 'Content-Type': 'application/json' },
                         body: JSON.stringify({
-                            role: session.role,
-                            level: session.level,
-                            interview_type: session.interviewType,
+                            job_description: session.jobDescription,
+                            resume_text: session.resumeText,
+                            round_type: session.roundType,
                             previous_question: question.questionText,
                             user_answer: question.userAnswerText,
                             user_code: question.userSubmittedCode,
@@ -477,6 +503,8 @@ const endSession = asyncHandler(async (req, res) => {
     };
 
     await session.save();
+    
+    sessionCache.flushAll(); // Invalidate cache on completion
 
     const io = req.app.get('io');
     pushSocketUpdate(io, userId, sessionId, 'SESSION_COMPLETED', 'Interview session ended early.', session);

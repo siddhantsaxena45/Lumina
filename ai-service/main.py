@@ -78,15 +78,15 @@ async def generate_with_retry(client=None, client_manager=None, **kwargs):
 
 # --- Request / Response Models ---
 class QuestionResquest(BaseModel):
-    role: str = "MERN Stack Developer"
-    level: str = "Junior"
+    job_description: str
+    resume_text: str
     count: int = 5
-    interview_type: str = "coding-mix"
+    round_type: str = "tech-1"
 
 class NextQuestionRequest(BaseModel):
-    role: str
-    level: str
-    interview_type: str
+    job_description: str
+    resume_text: str
+    round_type: str
     previous_question: str
     user_answer: Optional[str] = None
     user_code: Optional[str] = None
@@ -94,13 +94,16 @@ class NextQuestionRequest(BaseModel):
 
 class QuestionResponse(BaseModel):
     questions: list[str]
+    jd_summary: str
+    company_name: str
+    ats_score: int
     model_used: str
 
 class EvaluationRequest(BaseModel):
     question: str
     question_type: str
-    role: str
-    level: str
+    job_description: str
+    resume_text: str
     user_answer: Optional[str] = None
     user_code: Optional[str] = None
 
@@ -131,34 +134,36 @@ async def root():
 @app.post("/generate-questions", response_model=QuestionResponse)
 async def generate_questions(request: QuestionResquest):
     try:
-        if request.interview_type == "behavioral":
+        if request.round_type == "hr":
             instruction = (
-                "All questions MUST be HR / Behavioral interview questions. "
+                "All questions MUST be HR / Behavioral / Fit interview questions. "
                 "Act as a hiring manager. Ask questions that require the candidate to use the STAR framework "
-                "(Situation, Task, Action, Result). Examples: 'Tell me about a time when...', 'Describe a situation where...'. "
+                "or general behavioral questions based on the candidate's resume and job description. "
                 "Do NOT generate any technical coding or implementation challenges."
             )
-        elif request.interview_type == "coding-mix":
-            coding_count = int(request.count * 0.2)
-            oral_oral = int(request.count) - int(coding_count)
+        elif request.round_type == "tech-1":
             instruction = (
-                f"The first {coding_count} questions MUST be coding challenge requiring function implementation. "
-                f"The remaining {oral_oral} questions MUST be conceptual oral questions."
+                f"All {request.count} questions MUST be coding challenges (DSA or Full Stack) requiring function implementation, "
+                f"tailored to the Job Description."
             )
-        else:
-            instruction = "All questions MUST be conceptual oral questions. Do Not generate any coding or implementation challenges."
+        else: # tech-2
+            instruction = "All questions MUST be conceptual oral questions on core subjects (OOPs, DBMS, etc.), resume deep dive, or puzzles. Do Not generate any coding or implementation challenges."
 
         system_instruction = (
-            "You are an expert technical interviewer. "
-            "Task: Generate interview questions. "
+            "You are an expert technical interviewer and recruiter. "
+            "Task: Generate interview questions AND evaluate the candidate's resume against the Job Description. "
             "CRITICAL: Do NOT include any introductory phrases like 'To help you understand...' or 'Here is a question:'. "
             "CRITICAL: Start immediately with the question body. "
             f"Instructions: {instruction} "
-            "Respond ONLY with a JSON object containing a 'questions' array of strings."
+            "Respond ONLY with a JSON object containing: "
+            "1. 'questions' (array of strings) "
+            "2. 'jd_summary' (a very brief 1-sentence summary of the Job Description) "
+            "3. 'company_name' (Extract the company name from the JD, or 'Unknown Company' if missing) "
+            "4. 'ats_score' (integer 0-100 indicating how well the resume matches the JD)."
         )
 
         user_prompt = (
-            f"Generate exactly {request.count} unique, comprehensive interview questions for a {request.level} level {request.role}. "
+            f"Generate exactly {request.count} unique, comprehensive interview questions for a candidate based on this Job Description:\n{request.job_description}\n\nAnd this Resume:\n{request.resume_text}\n\n"
             "Preserve all necessary code context or scenario details within the single question string."
         )
         
@@ -189,7 +194,13 @@ async def generate_questions(request: QuestionResquest):
             else:
                 clean_questions.append(str(q))
             
-        return QuestionResponse(questions=clean_questions[:request.count], model_used=GEMINI_MODEL_NAME)
+        return QuestionResponse(
+            questions=clean_questions[:request.count],
+            jd_summary=response_data.get('jd_summary', 'No summary provided.'),
+            company_name=response_data.get('company_name', 'Unknown Company'),
+            ats_score=int(response_data.get('ats_score', 0)),
+            model_used=GEMINI_MODEL_NAME
+        )
 
     except Exception as e:
         print(f"generate_questions error: {e}")
@@ -208,7 +219,8 @@ async def generate_next_question(request: NextQuestionRequest):
         )
 
         user_prompt = (
-            f"Role: {request.role}\nLevel: {request.level}\n"
+            f"Job Description:\n{request.job_description}\n\nResume:\n{request.resume_text}\n"
+            f"Round Type: {request.round_type}\n"
             f"Previous Question: {request.previous_question}\n"
             f"Candidate's Answer: {request.user_answer or 'None'}\n"
             f"Candidate's Code: {request.user_code or 'None'}\n"
@@ -285,11 +297,11 @@ class EvaluationResponseWithTranscription(BaseModel):
 
 @app.post("/evaluate")
 async def evaluate(
-    role: str = Form(...),
-    level: str = Form(...),
+    job_description: str = Form(...),
+    resume_text: str = Form(...),
     question: str = Form(...),
     question_type: str = Form("oral"),
-    interview_type: str = Form("coding-mix"),
+    round_type: str = Form("tech-1"),
     user_answer: str = Form(""),
     user_code: str = Form(""),
     audioFile: UploadFile = File(None)
@@ -309,7 +321,7 @@ async def evaluate(
                 uploaded_file = await client.aio.files.upload(file=temp_audio_path)
                 contents_list.append(uploaded_file)
         
-        if interview_type == "behavioral":
+        if round_type == "hr":
             assessment_instruction = (
                 "This is a Behavioral/HR interview question. Evaluate the candidate's answer STRICTLY using the STAR framework "
                 "(Situation, Task, Action, Result). Did they provide a concrete example? Penalize vague answers. "
@@ -341,9 +353,9 @@ async def evaluate(
         )
         
         user_prompt = (
-            f"Role: {role}\n"
+            f"Job Description:\n{job_description}\n"
+            f"Resume:\n{resume_text}\n"
             f"Question: {question}\n"
-            f"Level: {level}\n"
             f"Verbal Answer Text Fallback: {user_answer}\n"
             f"Code Answer: {user_code}\n"
             "Return JSON matching: technicalScore, confidenceScore, aiFeedback, idealAnswer, transcription (if audio was provided)."
