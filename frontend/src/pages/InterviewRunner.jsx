@@ -113,16 +113,29 @@ function InterviewRunner() {
     return () => socketRef.current?.disconnect();
   }, [dispatch, sessionId]);
 
-  // Anti-Cheat: Visibility
+  // Anti-Cheat: Visibility & Fullscreen
   useEffect(() => {
     const handleVisibilityChange = () => {
       if (document.visibilityState === 'hidden' && hasJoined && !isTerminated) {
         setViolationCount(v => v + 1);
-        toast.error("Integrity Warning: Focus Lost!", { position: "top-center" });
+        toast.error("Integrity Warning: Focus Lost! Tab switching is prohibited.", { position: "top-center", toastId: 'visibility' });
       }
     };
+
+    const handleFullscreenChange = () => {
+      if (!document.fullscreenElement && hasJoined && !isTerminated) {
+        setViolationCount(v => v + 1);
+        toast.error("Integrity Warning: Exited Fullscreen Mode!", { position: "top-center", toastId: 'fullscreen' });
+      }
+    };
+
     document.addEventListener("visibilitychange", handleVisibilityChange);
-    return () => document.removeEventListener("visibilitychange", handleVisibilityChange);
+    document.addEventListener("fullscreenchange", handleFullscreenChange);
+    
+    return () => {
+        document.removeEventListener("visibilitychange", handleVisibilityChange);
+        document.removeEventListener("fullscreenchange", handleFullscreenChange);
+    }
   }, [hasJoined, isTerminated]);
 
   // Anti-Cheat: Clipboard, Context Menu, PrintScreen
@@ -137,22 +150,47 @@ function InterviewRunner() {
        toast.error("Violation: Right-click is disabled.", { position: "top-center", toastId: 'contextmenu' });
     };
     const handleKeyUp = (e) => {
-       if (e.key === 'PrintScreen' && hasJoined) {
+       if (e.key === 'PrintScreen' && hasJoined && !isTerminated) {
           setViolationCount(v => v + 1);
           toast.error("Violation: Screenshots are prohibited!", { position: "top-center", toastId: 'screenshot' });
        }
+    };
+
+    const handleKeyDown = (e) => {
+        if (!hasJoined || isTerminated) return;
+        
+        // Block F12 and Ctrl+Shift+I (DevTools)
+        if (e.key === 'F12' || (e.ctrlKey && e.shiftKey && (e.key === 'I' || e.key === 'i'))) {
+            e.preventDefault();
+            toast.error("Violation: Developer Tools are prohibited.", { position: "top-center", toastId: 'devtools' });
+            setViolationCount(v => v + 1);
+        }
+
+        // Block Cmd+Shift+3/4 (Mac Screenshots)
+        if (e.metaKey && e.shiftKey && (e.key === '3' || e.key === '4' || e.key === '5')) {
+            e.preventDefault();
+            toast.error("Violation: Screenshots are prohibited!", { position: "top-center", toastId: 'screenshot-mac' });
+            setViolationCount(v => v + 1);
+        }
+
+        // Block Ctrl+P (Print) and Ctrl+S (Save)
+        if (e.ctrlKey && (e.key === 'p' || e.key === 's' || e.key === 'P' || e.key === 'S')) {
+            e.preventDefault();
+        }
     };
 
     document.addEventListener('copy', handleCopyPaste);
     document.addEventListener('paste', handleCopyPaste);
     document.addEventListener('contextmenu', handleContextMenu);
     document.addEventListener('keyup', handleKeyUp);
+    document.addEventListener('keydown', handleKeyDown);
 
     return () => {
        document.removeEventListener('copy', handleCopyPaste);
        document.removeEventListener('paste', handleCopyPaste);
        document.removeEventListener('contextmenu', handleContextMenu);
        document.removeEventListener('keyup', handleKeyUp);
+       document.removeEventListener('keydown', handleKeyDown);
     };
   }, [hasJoined, isTerminated]);
 
