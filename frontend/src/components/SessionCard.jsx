@@ -22,8 +22,8 @@ const SessionCard = ({ session, onClick, onDelete }) => {
     const scoreColor = session.status === 'completed' ? (session.overallScore > 75 ? ' text-emerald-500' : 'text-orange-500') : 'text-slate-300';
 
     return (
-        <div onClick={() => onClick(session)} className='group bg-white border border-slate-100 p-5 sm:p-6 rounded-2xl sm:rounded-[2rem] flex flex-col md:flex-row items-center gap-4 transition-all hover:shadow-lg active:scale-[0.98] cursor-pointer'>
-            <div className='flex items-center gap-4 sm:gap-6 w-full md:w-auto flex-grow'>
+        <div onClick={() => onClick(session)} className='relative group bg-white border border-slate-100 p-5 sm:p-6 rounded-2xl sm:rounded-[2rem] flex flex-col md:flex-row items-center gap-4 transition-all hover:shadow-lg active:scale-[0.98] cursor-pointer'>
+            <div className='flex items-center gap-4 sm:gap-6 w-full md:w-auto flex-grow pr-8'>
                 <div className={`w-12 h-12 sm:w-14 sm:h-14 shrink-0 rounded-xl sm:rounded-2xl flex items-center justify-center text-xl sm:text-2xl shadow-sm ${iconBg}`}>{getIcon()}</div>
                 <div className='overflow-hidden'>
                     <h3 className='font-bold text-slate-900 text-base sm:text-lg truncate group-hover:text-teal-600'>{session.companyName || 'Unknown Company'}</h3>
@@ -55,14 +55,10 @@ const SessionCard = ({ session, onClick, onDelete }) => {
 
             </div>
 
-
-            <div className='hidden md:block w-px h-10 bg-slate-100 mx-2'></div>
-
-            <button onClick={(e) => { e.stopPropagation(); if (isDeletable) onDelete(e, session._id) }} className='p-3 text-slate-300 hover:text-rose-500 hover:bg-rose-50 rounded-xl transition-all' title='Delete Session'>
+            <button onClick={(e) => { e.stopPropagation(); if (isDeletable) onDelete(e, session._id) }} className='absolute top-4 right-4 p-2 text-slate-300 hover:text-rose-500 hover:bg-rose-50 rounded-xl transition-all' title='Delete Session'>
                 <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
                 </svg>
-
             </button>
         </div>
     )
