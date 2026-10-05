@@ -2,7 +2,6 @@
 import asyncHandler from 'express-async-handler';
 import Session from '../models/SessionModel.js';
 import fs from 'fs'; // <-- NEW: For reading and deleting the temporary file
-import FormData from 'form-data'; // <-- NEW: For sending files to FastAPI
 import path from 'path';
 import mongoose from 'mongoose';
 import NodeCache from 'node-cache';
@@ -276,13 +275,14 @@ const evaluateAnswerAsync = async (io, userId, sessionId, questionIndex, audioFi
         formData.append('user_code', code || "");
         
         if (audioFilePath && fs.existsSync(audioFilePath)) {
-            formData.append('audioFile', fs.createReadStream(audioFilePath));
+            const fileBuffer = await fs.promises.readFile(audioFilePath);
+            const audioBlob = new Blob([fileBuffer], { type: 'audio/webm' });
+            formData.append('audioFile', audioBlob, 'audio.webm');
         }
 
         const evalResponse = await fetchWithRetry(`${AI_SERVICE_URL}/evaluate`, {
             method: 'POST',
             body: formData,
-            headers: formData.getHeaders(),
         });
 
         const evalData = await evalResponse.json();
