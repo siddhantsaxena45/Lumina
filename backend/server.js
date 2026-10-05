@@ -37,6 +37,7 @@ app.use(cors({
 // 2. Security Middleware
 app.use(helmet({
     crossOriginResourcePolicy: false,
+    crossOriginOpenerPolicy: { policy: "same-origin-allow-popups" }
 }));
 app.use(mongoSanitize());
 
