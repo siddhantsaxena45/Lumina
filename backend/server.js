@@ -8,7 +8,6 @@ import userRoutes from "./routes/userRoutes.js";
 import sessionRoutes from "./routes/sessionRoutes.js";
 import { notFound, errorHandler } from "./middleware/errorMiddleware.js";
 import helmet from "helmet";
-import mongoSanitize from "express-mongo-sanitize";
 import { rateLimit } from "express-rate-limit";
 
 dotenv.config();
@@ -39,7 +38,6 @@ app.use(helmet({
     crossOriginResourcePolicy: false,
     crossOriginOpenerPolicy: { policy: "same-origin-allow-popups" }
 }));
-app.use(mongoSanitize());
 
 const apiLimiter = rateLimit({
     windowMs: 15 * 60 * 1000, // 15 minutes
