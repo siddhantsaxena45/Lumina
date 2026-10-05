@@ -23,11 +23,11 @@ const SessionCard = ({ session, onClick, onDelete }) => {
 
     return (
         <div onClick={() => onClick(session)} className='relative group bg-white border border-slate-100 py-5 pl-5 pr-14 sm:py-6 sm:pl-6 sm:pr-24 rounded-2xl sm:rounded-[2rem] flex flex-col md:flex-row items-center gap-4 transition-all hover:shadow-lg active:scale-[0.98] cursor-pointer'>
-            <div className='flex items-center gap-4 sm:gap-6 w-full md:w-auto flex-grow pr-8'>
+            <div className='flex items-center gap-4 sm:gap-6 w-full md:w-auto flex-grow pr-8 min-w-0'>
                 <div className={`w-12 h-12 sm:w-14 sm:h-14 shrink-0 rounded-xl sm:rounded-2xl flex items-center justify-center text-xl sm:text-2xl shadow-sm ${iconBg}`}>{getIcon()}</div>
-                <div className='overflow-hidden'>
+                <div className='overflow-hidden min-w-0'>
                     <h3 className='font-bold text-slate-900 text-base sm:text-lg truncate group-hover:text-teal-600'>{session.companyName || 'Unknown Company'}</h3>
-                    <div className='flex items-center gap-2 text-[10px] font-bold text-slate-400 mt-1 uppercase tracking-tight'>
+                    <div className='flex items-center gap-2 text-[10px] font-bold text-slate-400 mt-1 uppercase tracking-tight flex-wrap'>
                         <span>{new Date(session.createdAt).toLocaleDateString()}</span>
                         <span>.</span>
                         <span className='text-slate-600 bg-slate-100 px-2 py-0.5 rounded-md whitespace-nowrap'>{getRoundTitle()}</span>
@@ -35,7 +35,8 @@ const SessionCard = ({ session, onClick, onDelete }) => {
                 </div>
             </div>
 
-            <div className='flex items-center justify-between md:justify-end gap-6 w-full md:w-auto border-t md:border-t-0 pt-3 md:pt-0'>
+            {/* Added mr-10 sm:mr-16 to explicitly push this entire block away from the right edge */}
+            <div className='flex items-center justify-between md:justify-end gap-6 w-full md:w-auto border-t md:border-t-0 pt-3 md:pt-0 mr-4 sm:mr-14'>
                 <div className='text-left md:text-center'>
                     <p className='text-[9px] font-black text-slate-300 uppercase tracking-widest'>Global Score</p>
                     <p className={`text-xl sm:text-2xl font-black ${scoreColor}`}>
