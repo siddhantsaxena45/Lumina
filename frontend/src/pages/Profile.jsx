@@ -387,19 +387,6 @@ const Profile = () => {
                         />
                     </FormField>
 
-                    <FormField label="Target Role">
-                        <div className='relative'>
-                        <select name="preferredRole" value={formData.preferredRole} onChange={handleChange} className={`${inputBase} appearance-none`}>
-                            {
-                            ROLES.map((role) => (
-                                <option key={role} value={role}>{role}</option>
-                            ))
-                            }
-                        </select>
-                        <SelectArrow />
-                        </div>
-                    </FormField>
-
                     <div className='pt-4'>
                         <button
                         type='submit'
